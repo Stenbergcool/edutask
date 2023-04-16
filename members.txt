@@ -1,1 +1,9 @@
-Alex
+Names
+Alexander Stenberg Widman
+Eric Samuelsson
+
+Group number
+16
+
+Link to edutask repository
+https://github.com/Stenbergcool/edutask
