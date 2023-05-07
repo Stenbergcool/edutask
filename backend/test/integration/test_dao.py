@@ -11,7 +11,8 @@ validator = {
         "properties": {
             "title": {
                 "bsonType": "string",
-                "description": "the title of a task must be determined"
+                "description": "the title of a task must be determined",
+                "uniqueItems": True
             },
         }
     }
@@ -19,19 +20,32 @@ validator = {
 
 
 @pytest.fixture
-@patch('src.util.dao.getValidator', autospec=True)
-def sut(mockedValidator):
-    mockedValidator.return_value = validator
-    sut = DAO("test")
-    return sut
+def sut():
+    with patch('src.util.dao.getValidator', autospec=True) as mockedValidator:
+        mockedValidator.return_value = validator
+        sut = DAO("test")
+        yield sut
+        sut.drop()
+
+@pytest.mark.integration
+def test_missing_property(sut):
+    with pytest.raises(WriteError):
+        sut.create({"title": 142})
+
+@pytest.mark.integration
+def test_not_bson_compile(sut):
+    with pytest.raises(WriteError):
+        sut.create({"title": 142, "description": "TestOne"})
+        sut.create({"title": 142, "description": "TestOne"})
+
+@pytest.mark.integration
+def test_not_unique(sut):
+    with pytest.raises(WriteError):
+        sut.create({"title": 142, "description": "TestOne"})
+        sut.create({"title": 142, "description": "TestOne"})
 
 @pytest.mark.integration
 def test_create_valid_data(sut):
     result = sut.create({"title": "testOne", "description": "TestOne"})
     assert isinstance(result, object)
     sut.drop()
-
-@pytest.mark.integration
-def test_create_not_valid_data(sut):
-    with pytest.raises(WriteError):
-        result = sut.create({"title": 142, "description": "TestOne"})
