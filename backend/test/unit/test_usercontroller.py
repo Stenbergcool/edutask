@@ -2,66 +2,47 @@ import pytest
 import unittest.mock as mock
 from src.controllers.usercontroller import UserController
 
-"""Email exists, email valid and email not unique"""
-def test_valid_email_exist_not_unique():
+"""Email exists, email not unique"""
+@pytest.mark.unit
+def test_exists_not_unique():
     mockedDao = mock.MagicMock()
     mockedDao.find.return_value = [{'Email': 'hello@gmail.com'}, {'Email': 'hello@gmail.com'}]
     user_controller = UserController(mockedDao)
     result = user_controller.get_user_by_email('hello@gmail.com')
     assert result == {'Email': 'hello@gmail.com'}
 
-"""Email exists, email not valid and email unique"""
-def test_not_valid_exist_unique():
-    with pytest.raises(ValueError, match='Error: invalid email address'):
-        mockedDao = mock.MagicMock()
-        mockedDao.find.return_value = [{'Email': 'hello'}]
-        user_controller = UserController(mockedDao)
-        user_controller.get_user_by_email('hello')
-
-"""Email exists, email valid and email unique"""
-def test_valid_exist_unique():
+"""Email exists, email unique"""
+@pytest.mark.unit
+def test_exists_unique():
     mockedDao = mock.MagicMock()
     mockedDao.find.return_value = [{'Email': 'hello@gmail.com'}]
     user_controller = UserController(mockedDao)
     result = user_controller.get_user_by_email('hello@gmail.com')
     assert result == {'Email': 'hello@gmail.com'}
 
-"""Email exists, email not valid and email not unique"""
-def test_not_valid_exist_not_unique():
+"""Email not valid"""
+@pytest.mark.unit
+def test_not_valid():
     with pytest.raises(ValueError, match='Error: invalid email address'):
         mockedDao = mock.MagicMock()
         mockedDao.find.return_value = [{'Email': 'hello'}]
         user_controller = UserController(mockedDao)
         user_controller.get_user_by_email('hello')
 
-"""Email does not exists, email valid and email unique"""
-def test_valid_email_does_not_exist_unique():
+"""Email does not exists"""
+@pytest.mark.unit
+def test_not_exists():
     mockedDao = mock.MagicMock()
-    mockedDao.find.return_value = None
+    mockedDao.find.return_value = []
     user_controller = UserController(mockedDao)
     result = user_controller.get_user_by_email("hello@gmail.com")
-    assert result == None
+    assert result is None
 
-"""Email does not exists, email valid and email not unique"""
-def test_valid_email_does_not_exist_not_unique():
-    mockedDao = mock.MagicMock()
-    mockedDao.find.return_value = None
-    user_controller = UserController(mockedDao)
-    result = user_controller.get_user_by_email("hello@gmail.com")
-    assert result == None
-
-"""Email does not exists, email not valid and email unique"""
-def test_not_valid_email_does_not_exist():
-    with pytest.raises(ValueError, match=r"Error: invalid email address"):
+"""Database operation failed"""
+@pytest.mark.unit
+def test_database_fail():
+    with pytest.raises(Exception) as e:
         mockedDao = mock.MagicMock()
-        mockedDao.find.return_value = None
+        mockedDao.side_effect = Exception()
         user_controller = UserController(mockedDao)
-        user_controller.get_user_by_email("hello")
-
-"""Email does not exists, email not valid and email not unique"""
-def test_not_valid_email_does_not_exist_not_unique():
-    with pytest.raises(ValueError, match=r"Error: invalid email address"):
-        mockedDao = mock.MagicMock()
-        mockedDao.find.return_value = None
-        user_controller = UserController(mockedDao)
-        user_controller.get_user_by_email("hello")
+        user_controller.get_user_by_email("hello@gmail.com")
